@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Senha - Consignei</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <style>
+        :root { 
+            --primary: #d4af37; --primary-hover: #b8962e;
+            --dark: #1a1a1a; --success: #28a745; --danger: #dc3545;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #111 0%, #2a2a2a 100%);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box;
+        }
+
+        .card {
+            background: white; padding: 40px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 400px;
+            border-top: 5px solid var(--primary);
+            text-align: center;
+        }
+
+        .logo {
+            margin-bottom: 20px; font-size: 24px; font-weight: 700; color: var(--dark);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .logo i { color: var(--primary); font-size: 28px; }
+
+        h2 { margin: 0 0 10px 0; color: var(--dark); font-size: 22px; }
+        p.desc { color: #666; font-size: 13px; margin-bottom: 25px; line-height: 1.5; }
+
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { font-size: 13px; color: #666; font-weight: 500; display: block; margin-bottom: 5px; }
+        
+        input {
+            width: 100%; padding: 12px; border: 1px solid #ddd;
+            border-radius: 8px; box-sizing: border-box; font-family: 'Poppins', sans-serif;
+            transition: 0.3s;
+        }
+        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2); }
+
+        button {
+            width: 100%; padding: 12px; background: var(--primary); color: white;
+            border: none; border-radius: 8px; font-size: 16px; font-weight: 600;
+            cursor: pointer; transition: 0.3s;
+        }
+        button:hover { background: var(--primary-hover); }
+        button:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        .footer-link { margin-top: 20px; font-size: 13px; }
+        .footer-link a { color: #666; text-decoration: none; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .footer-link a:hover { color: var(--primary); }
+
+        /* MODAIS */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000;
+            justify-content: center; align-items: center; backdrop-filter: blur(3px);
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 12px;
+            width: 90%; max-width: 350px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+        @keyframes slideUp { from{transform:translateY(20px)} to{transform:translateY(0)} }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="logo"><i class="ph-fill ph-diamonds-four"></i> Consignei</div>
+    
+    <h2>Recuperar Senha</h2>
+    <p class="desc">
+        Digite o e-mail associado à sua conta e enviaremos um link para redefinir sua senha.
+    </p>
+
+    <form id="formRecuperar" onsubmit="enviarSolicitacao(event)">
+        <div class="input-group">
+            <label>E-mail Cadastrado</label>
+            <input type="email" id="email" placeholder="seu@email.com" required>
+        </div>
+
+        <button type="submit" id="btnEnv">Enviar Link de Recuperação</button>
+    </form>
+
+    <div class="footer-link">
+        <a href="login.html"><i class="ph ph-arrow-left"></i> Voltar para Login</a>
+    </div>
+</div>
+
+<div id="modalSucesso" class="modal-overlay">
+    <div class="modal-content">
+        <div style="margin-bottom: 15px;">
+            <i class="ph-fill ph-paper-plane-tilt" style="font-size: 50px; color: var(--primary);"></i>
+        </div>
+        <h3 style="margin: 0 0 10px 0; color: var(--dark);">E-mail Enviado!</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.5;">
+            Se o e-mail estiver cadastrado, você receberá o link em instantes. Verifique também sua caixa de <strong>Spam</strong>.
+        </p>
+        <button onclick="window.location.href='login.html'" style="background: var(--dark);">Voltar para Login</button>
+    </div>
+</div>
+
+<div id="modalErro" class="modal-overlay">
+    <div class="modal-content">
+        <div style="margin-bottom: 15px;"><i class="ph-fill ph-warning-circle" style="font-size: 50px; color: var(--danger);"></i></div>
+        <h3 style="margin: 0 0 10px 0; color: var(--dark);">Erro</h3>
+        <p id="textoErro" style="font-size: 13px; color: #666; margin-bottom: 20px;">Falha ao conectar.</p>
+        <button onclick="document.getElementById('modalErro').classList.remove('open')" style="background: var(--dark);">Tentar Novamente</button>
+    </div>
+</div>
+
+<script>
+    async function enviarSolicitacao(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const btn = document.getElementById('btnEnv');
+        const textoOriginal = btn.innerText;
+        
+        if(!email) return;
+
+        btn.innerText = "Enviando..."; 
+        btn.disabled = true; 
+        btn.style.opacity = "0.7";
+
+        try {
+            const res = await fetch('../api/solicitar_recuperacao.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            });
+            const json = await res.json();
+            
+            if(json.success) {
+                document.getElementById('modalSucesso').classList.add('open');
+            } else {
+                document.getElementById('textoErro').innerText = json.message;
+                document.getElementById('modalErro').classList.add('open');
+                btn.innerText = textoOriginal;
+                btn.disabled = false;
+                btn.style.opacity = "1";
+            }
+            
+        } catch(error) {
+            console.error(error);
+            document.getElementById('textoErro').innerText = "Erro de conexão com o servidor.";
+            document.getElementById('modalErro').classList.add('open');
+            btn.innerText = textoOriginal;
+            btn.disabled = false;
+            btn.style.opacity = "1";
+        }
+    }
+</script>
+
+</body>
+</html>

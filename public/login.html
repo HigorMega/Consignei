@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consignei - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        :root { 
+            --primary: #d4af37; --primary-hover: #b8962e;
+            --dark: #1a1a1a; --success: #28a745; --danger: #dc3545;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #111 0%, #2a2a2a 100%);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box;
+        }
+
+        .card {
+            background: white; padding: 40px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 400px;
+            border-top: 5px solid var(--primary);
+            position: relative; /* Para posicionamentos internos se precisar */
+        }
+
+        /* NOVO ESTILO DO BOTÃO VOLTAR (DENTRO DO CARD) */
+        .header-voltar {
+            width: 100%; text-align: left; margin-bottom: 20px;
+        }
+        .link-voltar {
+            text-decoration: none; color: #999; 
+            font-size: 13px; font-weight: 600; 
+            display: inline-flex; align-items: center; gap: 5px; 
+            transition: 0.2s;
+        }
+        .link-voltar:hover { 
+            color: var(--primary); transform: translateX(-3px);
+        }
+
+        .logo {
+            text-align: center; margin-bottom: 30px;
+            font-size: 24px; font-weight: 700; color: var(--dark);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .logo i { color: var(--primary); font-size: 28px; }
+
+        .input-group { margin-bottom: 15px; }
+        label { font-size: 13px; color: #666; font-weight: 500; display: block; margin-bottom: 5px; }
+        
+        .password-wrapper { position: relative; width: 100%; }
+        
+        input {
+            width: 100%; padding: 12px; border: 1px solid #ddd;
+            border-radius: 8px; box-sizing: border-box; font-family: 'Poppins', sans-serif;
+            transition: 0.3s;
+        }
+        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2); }
+
+        .eye-icon {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            cursor: pointer; color: #999; font-size: 20px; transition: 0.2s;
+        }
+        .eye-icon:hover { color: var(--primary); }
+
+        button {
+            width: 100%; padding: 12px; background: var(--primary); color: white;
+            border: none; border-radius: 8px; font-size: 16px; font-weight: 600;
+            cursor: pointer; margin-top: 10px; transition: 0.3s;
+        }
+        button:hover { background: var(--primary-hover); }
+        button:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        .footer-link { text-align: center; margin-top: 20px; font-size: 13px; color: #888; }
+        .footer-link a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .footer-link a:hover { text-decoration: underline; }
+
+        /* MODAIS */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000;
+            justify-content: center; align-items: center; backdrop-filter: blur(3px);
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 12px;
+            width: 90%; max-width: 350px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+        @keyframes slideUp { from{transform:translateY(20px)} to{transform:translateY(0)} }
+
+        /* --- BARRA DE COOKIES (MINIMALISTA) --- */
+        .cookie-banner {
+            position: fixed; bottom: -100px; left: 0; width: 100%;
+            background: rgba(26, 26, 26, 0.95); 
+            border-top: 1px solid #333;
+            color: #fff; padding: 10px;
+            
+            /* CENTRALIZAÇÃO PERFEITA */
+            display: flex; justify-content: center; align-items: center; gap: 15px;
+            
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+            z-index: 9999; backdrop-filter: blur(5px);
+            transition: bottom 0.5s ease-out;
+            box-sizing: border-box;
+        }
+        .cookie-banner.show { bottom: 0; }
+        
+        .cookie-text { 
+            font-size: 11px; line-height: 1.4; color: #ccc; 
+        }
+        .cookie-text a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .cookie-text a:hover { text-decoration: underline; }
+        
+        .cookie-btn {
+            background: var(--primary); color: white; border: none; 
+            padding: 5px 12px; /* Botão bem menor e fino */
+            border-radius: 4px; font-weight: 600; cursor: pointer; 
+            font-size: 11px; 
+            white-space: nowrap; margin: 0; width: auto;
+        }
+        .cookie-btn:hover { background: var(--primary-hover); }
+
+        @media (max-width: 600px) {
+            .cookie-banner { flex-direction: column; text-align: center; gap: 8px; }
+            .cookie-btn { width: 100%; }
+            .card { padding: 30px 20px; }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header-voltar">
+        <a href="index.html" class="link-voltar">
+            <i class="ph ph-arrow-left"></i> Voltar ao Site
+        </a>
+    </div>
+
+    <div class="logo"><i class="ph-fill ph-diamonds-four"></i> Consignei</div>
+    
+    <form id="formLogin">
+        <div class="input-group">
+            <label>E-mail</label>
+            <input type="email" id="email" placeholder="seu@email.com" required>
+        </div>
+
+        <div class="input-group">
+            <label>Senha</label>
+            <div class="password-wrapper">
+                <input type="password" id="senha" placeholder="Sua senha" required>
+                <i class="ph ph-eye-slash eye-icon" onclick="toggleSenha('senha', this)"></i>
+            </div>
+            
+            <div style="text-align: right; margin-top: 5px;">
+                <a href="recuperar.html" style="font-size: 11px; color: #999; text-decoration: none;">Esqueci minha senha</a>
+            </div>
+        </div>
+
+        <button type="submit" id="btnEntrar">Entrar no Sistema</button>
+    </form>
+
+    <div class="footer-link">
+        Ainda não tem conta? <br>
+        <a href="cadastro.html">Criar conta grátis</a>
+    </div>
+
+    <div style="margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px; font-size: 11px; text-align: center; color: #999;">
+        Ao continuar, você concorda com nossos <br>
+        <a href="termos.html" target="_blank" style="color: #666; text-decoration: underline;">Termos de Uso</a> e 
+        <a href="privacidade.html" target="_blank" style="color: #666; text-decoration: underline;">Política de Privacidade</a>.
+    </div>
+</div>
+
+<div id="cookieBanner" class="cookie-banner">
+    <div class="cookie-text">
+        Usamos cookies para melhorar sua experiência. Ao continuar, você concorda com a 
+        <a href="privacidade.html" target="_blank">Política de Privacidade</a>.
+    </div>
+    <button class="cookie-btn" onclick="aceitarCookies()">Aceitar</button>
+</div>
+
+<div id="modalSucesso" class="modal-overlay">
+    <div class="modal-content">
+        <div style="margin-bottom: 15px;">
+            <i class="ph-fill ph-check-circle" style="font-size: 50px; color: var(--success);"></i>
+        </div>
+        <h3 style="margin: 0 0 10px 0; color: var(--dark);">Bem-vindo!</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Redirecionando para o painel...</p>
+    </div>
+</div>
+
+<div id="modalErro" class="modal-overlay">
+    <div class="modal-content">
+        <div style="margin-bottom: 15px;">
+            <i class="ph-fill ph-warning-circle" style="font-size: 50px; color: var(--danger);"></i>
+        </div>
+        
+        <h3 style="margin: 0 0 10px 0; color: var(--dark);">Atenção</h3>
+        
+        <p id="msgErroTexto" style="font-size: 13px; color: #666; margin-bottom: 20px;">
+            Erro ao processar.
+        </p>
+
+        <button id="btnFecharErro" onclick="document.getElementById('modalErro').classList.remove('open')" style="background: var(--dark);">
+            Tentar Novamente
+        </button>
+
+        <button id="btnReenviarEmail" style="display: none; background: var(--primary); margin-top: 10px;" onclick="reenviarEmailAtivacao()">
+            Reenviar E-mail de Ativação
+        </button>
+    </div>
+</div>
+
+<script>
+    let emailTentativa = "";
+
+    // --- LÓGICA DE COOKIES ---
+    function checarCookies() {
+        if (!localStorage.getItem('consignei_cookies_accepted')) {
+            setTimeout(() => {
+                document.getElementById('cookieBanner').classList.add('show');
+            }, 1000);
+        }
+    }
+
+    function aceitarCookies() {
+        localStorage.setItem('consignei_cookies_accepted', 'true');
+        document.getElementById('cookieBanner').classList.remove('show');
+    }
+    
+    window.onload = checarCookies;
+
+    // --- FUNÇÕES DE LOGIN ---
+    function toggleSenha(inputId, icon) {
+        const input = document.getElementById(inputId);
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove('ph-eye-slash');
+            icon.classList.add('ph-eye');
+        } else {
+            input.type = "password";
+            icon.classList.remove('ph-eye');
+            icon.classList.add('ph-eye-slash');
+        }
+    }
+
+    document.getElementById('formLogin').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('btnEntrar');
+        const originalText = btn.innerText;
+        const email = document.getElementById('email').value;
+        const senha = document.getElementById('senha').value;
+        
+        emailTentativa = email;
+
+        document.getElementById('btnReenviarEmail').style.display = 'none';
+        document.getElementById('btnFecharErro').style.display = 'inline-block';
+        document.getElementById('btnFecharErro').innerText = "Tentar Novamente";
+        
+        btn.innerText = "Verificando...";
+        btn.disabled = true;
+        btn.style.opacity = "0.7";
+
+        try {
+            const response = await fetch('../api/login.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, senha: senha })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                document.getElementById('modalSucesso').classList.add('open');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1500);
+            } else {
+                const msg = result.message || result.error || "Dados incorretos.";
+                document.getElementById('msgErroTexto').innerText = msg;
+                
+                if (msg.toLowerCase().includes("confirme") || msg.toLowerCase().includes("ativar")) {
+                    document.getElementById('btnReenviarEmail').style.display = 'inline-block';
+                    document.getElementById('btnFecharErro').innerText = "Fechar";
+                }
+
+                document.getElementById('modalErro').classList.add('open');
+                btn.innerText = originalText; btn.disabled = false; btn.style.opacity = "1";
+            }
+
+        } catch (error) {
+            console.error('Erro:', error);
+            document.getElementById('msgErroTexto').innerText = "Erro de conexão com o servidor.";
+            document.getElementById('modalErro').classList.add('open');
+            btn.innerText = originalText; btn.disabled = false; btn.style.opacity = "1";
+        }
+    });
+
+    async function reenviarEmailAtivacao() {
+        const btn = document.getElementById('btnReenviarEmail');
+        btn.innerText = "Enviando...";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('../api/reenviar_email.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: emailTentativa })
+            });
+            const json = await res.json();
+            document.getElementById('msgErroTexto').innerText = json.message;
+            btn.style.display = 'none';
+        } catch (e) {
+            alert("Erro ao tentar reenviar.");
+            btn.innerText = "Tentar Reenviar";
+            btn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>
