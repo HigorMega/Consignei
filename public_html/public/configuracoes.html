@@ -579,6 +579,19 @@
             <div class="box">
                 <form id="formConfig">
                     <div style="margin-bottom: 20px;"><label style="font-size:12px; color:#999; font-weight:600;">Nome da Loja</label><input type="text" id="cfgNomeLoja"></div>
+                    <div style="margin-bottom: 20px;">
+                        <label style="font-size:12px; color:#999; font-weight:600;">Slug da Vitrine (link)</label>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <input type="text" id="cfgSlug" placeholder="ex: minha-loja" style="flex:1;">
+                            <button type="button" class="btn btn-secondary" id="btnGerarSlug" style="height:45px; padding: 0 14px;">
+                                Gerar do Nome
+                            </button>
+                        </div>
+                        <small style="display:block; margin-top:8px; color:#999; font-size:12px; line-height:1.3;">
+                            Apenas letras minúsculas, números e hífen. Ex: <strong>minha-loja</strong>
+                        </small>
+                    </div>
+
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;"><div><label style="font-size:12px; color:#999; font-weight:600;">Vendedor (@)</label><input type="text" id="cfgVendedor" placeholder="@seu.nome"></div><div><label style="font-size:12px; color:#999; font-weight:600;">Instagram</label><input type="text" id="cfgInstagram" placeholder="@loja"></div></div>
                     <div style="margin-bottom: 20px;"><label style="font-size:12px; color:#999; font-weight:600;">WhatsApp</label><input type="text" id="cfgWhats" placeholder="Ex: 5511999999999"></div>
                     <div style="margin-bottom: 30px;">
@@ -593,7 +606,7 @@
                     <button type="submit" class="btn btn-primary">Salvar Alterações</button>
                 </form>
             </div>
-            <div class="box" style="margin-top: 25px; background: #f9f9f9;"><h3 style="font-size: 14px; margin-top:0; color:#444;">Link da Vitrine</h3><div style="display: flex; gap: 10px;"><input type="text" id="linkVitrine" readonly style="background: white;"><button class="btn btn-primary" id="btnCopiarLink">Copiar</button></div></div>
+            <div class="box" style="margin-top: 25px; background: #f9f9f9;"><h3 style="font-size: 14px; margin-top:0; color:#444;">Link da Vitrine</h3><div style="display: flex; gap: 10px;"><input type="text" id="linkVitrine" readonly style="background: white;"><button class="btn btn-primary" id="btnCopiarLink">Copiar</button><a class="btn btn-secondary" id="btnAbrirLink" href="#" target="_blank" rel="noopener">Abrir</a></div></div>
             <div class="box" style="margin-top: 40px; border: 1px solid #ffcccc; background: #fff5f5;">
                 <h3 style="color: #d32f2f; margin-top: 0; display: flex; align-items: center; gap: 10px; font-size: 16px;"><i class="ph-fill ph-warning" style="font-size: 22px;"></i> Zona de Perigo</h3>
                 <p style="font-size: 13px; color: #666; line-height: 1.5; margin-bottom: 20px;">Ao excluir sua conta, todos os seus <strong>produtos, vendas, fotos e configurações</strong> serão apagados permanentemente. Esta ação é irreversível.</p>

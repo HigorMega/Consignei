@@ -1,35 +1,38 @@
 <?php
 session_start();
-header('Content-Type: application/json');
-include "../db/conexao.php";
+header('Content-Type: application/json; charset=UTF-8');
+require_once "../db/conexao.php";
 
-// 1. Inicializa a variável
-$loja_id = null;
+/**
+ * REGRA DE SEGURANÇA:
+ * - Se estiver logado, SEMPRE usa loja_id da sessão (ignora GET).
+ * - Se não estiver logado, permite leitura pública via ?loja_id= (somente READ).
+ */
 
-// 2. Verifica se veio o ID pela URL (para acesso público)
-if (isset($_GET['loja_id'])) {
-    $loja_id = $_GET['loja_id'];
-} 
-// 3. Se não veio pela URL, tenta pegar da sessão (para acesso do admin)
-elseif (isset($_SESSION['loja_id'])) {
-    $loja_id = $_SESSION['loja_id'];
+$loja_id = 0;
+
+// Se logado (painel)
+if (isset($_SESSION['logado']) && $_SESSION['logado'] === true && isset($_SESSION['loja_id'])) {
+    $loja_id = (int)$_SESSION['loja_id'];
+} else {
+    // Leitura pública (se você realmente precisar)
+    if (isset($_GET['loja_id'])) {
+        $loja_id = (int)$_GET['loja_id'];
+    }
 }
 
-// Se não achou nenhum ID, retorna vazio
-if (!$loja_id) {
-    echo json_encode([]);
+if ($loja_id <= 0) {
+    echo json_encode([], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
 try {
-    // 4. Busca apenas os produtos que pertencem a esta loja
     $stmt = $pdo->prepare("SELECT * FROM produtos WHERE loja_id = ? ORDER BY id DESC");
     $stmt->execute([$loja_id]);
     $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    echo json_encode($produtos);
-
+    echo json_encode($produtos, JSON_UNESCAPED_UNICODE);
 } catch (PDOException $e) {
-    echo json_encode([]);
+    echo json_encode([], JSON_UNESCAPED_UNICODE);
 }
 ?>

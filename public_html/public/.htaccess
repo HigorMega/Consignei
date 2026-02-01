@@ -1,30 +1,32 @@
-# =========================
-# Segurança básica
-# =========================
 Options -Indexes
 
-# =========================
-# URL limpa: sem .html
-# =========================
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # 1) Se alguém acessar /pagina.html -> redireciona para /pagina
+    # =========================================================
+    # ROTAS AMIGÁVEIS
+    # =========================================================
+    # /vitrine/nome-da-loja  ->  vitrine.html?slug=nome-da-loja
+    RewriteRule ^vitrine/([a-z0-9-]+)/?$ vitrine.html?slug=$1 [L,QSA]
+
+    # =========================================================
+    # URL canônica: remove .html (redirect 301)
+    # Ex: /login.html -> /login
+    # =========================================================
     RewriteCond %{THE_REQUEST} \s/+([^\s?]+)\.html[\s?] [NC]
     RewriteRule ^ %1 [R=301,L,NE]
 
-    # 2) Se acessar /pagina (sem extensão) e existir /pagina.html -> serve /pagina.html
+    # =========================================================
+    # Serve /pagina (sem extensão) usando /pagina.html, se existir
+    # Ex: /login -> /login.html
+    # =========================================================
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME}.html -f
     RewriteRule ^(.+?)/?$ $1.html [L]
 </IfModule>
 
-# Garante que / abra index.html
 DirectoryIndex index.html
 
-# =========================
-# Cache de assets (o que você já tinha)
-# =========================
 <IfModule mod_expires.c>
     ExpiresActive On
     ExpiresByType text/css "access plus 1 month"

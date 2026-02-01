@@ -3,6 +3,18 @@
  */
 
 const params = new URLSearchParams(window.location.search);
+
+// Suporta URLs novas: /vitrine/<slug>  (via .htaccess) e também legado: ?loja=17
+const pathParts = window.location.pathname.split('/').filter(Boolean);
+let lojaSlug = null;
+const vitrineIndex = pathParts.indexOf('vitrine');
+if (vitrineIndex >= 0 && pathParts.length > vitrineIndex + 1) {
+  lojaSlug = pathParts[vitrineIndex + 1];
+}
+if (!lojaSlug) {
+  lojaSlug = params.get('slug');
+}
+
 const lojaId = params.get('loja');
 let produtosData = [];
 let carrinho = [];
@@ -35,15 +47,17 @@ function mostrarAlertaPadrao(titulo, mensagem, tipo = 'error') {
 }
 
 async function iniciar() {
-    if (!lojaId) {
-        mostrarErro('Link incompleto. O link precisa terminar com ?loja=NÚMERO');
+    if (!lojaSlug && !lojaId) {
+        mostrarErro('Link incompleto. Use /vitrine/NOME-DA-LOJA (ou, no modo antigo, ?loja=NÚMERO).');
         esconderLoading();
         return;
     }
 
     try {
         const timestamp = new Date().getTime();
-        const url = `../api/dados_vitrine.php?loja=${lojaId}&t=${timestamp}`; 
+        const url = lojaSlug
+  ? `../api/dados_vitrine.php?slug=${encodeURIComponent(lojaSlug)}&t=${timestamp}`
+  : `../api/dados_vitrine.php?loja=${lojaId}&t=${timestamp}`; 
         
         console.log("Buscando dados em:", url);
 

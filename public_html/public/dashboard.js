@@ -66,6 +66,39 @@ const App = {
     filtro: { ano: new Date().getFullYear(), mes: new Date().getMonth() + 1 }
 };
 
+
+// --- SLUG (VITRINE) ---
+let originalSlug = "";
+
+function slugify(text) {
+    return (text || "")
+        .toString()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-+|-+$/g, "");
+}
+
+function isValidSlug(slug) {
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && slug.length <= 120;
+}
+
+function vitrineUrlFromSlug(slug) {
+    if (!slug) return "";
+    return `${window.location.origin}/vitrine/${slug}`;
+}
+
+function updateLinkUI(slug) {
+    const url = vitrineUrlFromSlug(slug);
+    const inputLink = document.getElementById('linkVitrine');
+    const btnAbrir = document.getElementById('btnAbrirLink');
+    if (inputLink) inputLink.value = url || "";
+    if (btnAbrir) btnAbrir.href = url || "#";
+}
+
 // --- FORMATAÇÃO SEGURA ---
 function formatMoney(v) {
     let val = parseFloat(v);
@@ -252,6 +285,47 @@ function setupStaticListeners() {
     if(document.getElementById('btnCancelarEdicao')) document.getElementById('btnCancelarEdicao').addEventListener('click', resetarFormularioProduto);
     if(document.getElementById('formConfig')) document.getElementById('formConfig').addEventListener('submit', salvarConfiguracoes);
     if(document.getElementById('btnCopiarLink')) document.getElementById('btnCopiarLink').addEventListener('click', copiarLinkVitrine);
+
+    // --- SLUG: gerar automaticamente e atualizar link ---
+    const slugEl = document.getElementById('cfgSlug');
+    const nomeEl = document.getElementById('cfgNomeLoja');
+    const btnGerarSlug = document.getElementById('btnGerarSlug');
+    const btnAbrirLink = document.getElementById('btnAbrirLink');
+
+    if (btnGerarSlug) btnGerarSlug.addEventListener('click', () => {
+        const base = nomeEl ? nomeEl.value : '';
+        const slug = slugify(base);
+        if (slugEl) slugEl.value = slug;
+        App.data.lojaSlug = slug || null;
+        gerarLinkVitrine();
+        if (slug && !isValidSlug(slug)) {
+            Toast.fire({ icon: 'warning', title: 'Slug gerado, mas precisa ajustar.' });
+        }
+    });
+
+    if (slugEl) {
+        slugEl.addEventListener('input', () => {
+            const cleaned = slugify(slugEl.value);
+            // não força a cada tecla se o usuário estiver digitando hífen; mas mantém limpo
+            slugEl.value = cleaned;
+            App.data.lojaSlug = cleaned || null;
+            gerarLinkVitrine();
+        });
+        slugEl.addEventListener('blur', () => {
+            const cleaned = slugify(slugEl.value);
+            slugEl.value = cleaned;
+            App.data.lojaSlug = cleaned || null;
+            gerarLinkVitrine();
+        });
+    }
+
+    if (btnAbrirLink) {
+        btnAbrirLink.addEventListener('click', (e) => {
+            const link = document.getElementById('linkVitrine')?.value;
+            if (!link) { e.preventDefault(); Toast.fire({ icon: 'warning', title: 'Link ainda não gerado.' }); }
+        });
+    }
+
     
     if(document.getElementById('btnAddCat')) document.getElementById('btnAddCat').addEventListener('click', () => abrirModal('categoria'));
     if(document.getElementById('btnAddForn')) document.getElementById('btnAddForn').addEventListener('click', () => abrirModal('fornecedor'));
@@ -753,11 +827,23 @@ async function carregarVendas() {
 async function carregarConfiguracoes() {
     try {
         const dados = await fetchSafe(API.config, "Config");
-        App.data.config = dados;
+        App.data.config = dados || {};
+
         if(document.getElementById('cfgNomeLoja') && dados.nome_loja) document.getElementById('cfgNomeLoja').value = dados.nome_loja;
         if(document.getElementById('cfgWhats') && dados.whatsapp) document.getElementById('cfgWhats').value = dados.whatsapp;
         if(document.getElementById('cfgVendedor')) document.getElementById('cfgVendedor').value = dados.nome_vendedor || dados.vendedor || '';
         if(document.getElementById('cfgInstagram') && dados.instagram) document.getElementById('cfgInstagram').value = dados.instagram;
+
+        // --- SLUG ---
+        const slugInput = document.getElementById('cfgSlug');
+        const slugAtual = (dados.slug || dados.loja_slug || App.data.lojaSlug || '').toString();
+        if (slugInput) slugInput.value = slugAtual;
+        originalSlug = slugAtual;
+        App.data.lojaSlug = slugAtual || null;
+
+        // Atualiza link da vitrine
+        gerarLinkVitrine();
+
         if(dados.tema) {
             document.querySelectorAll('.theme-opt').forEach(t => t.classList.remove('selected'));
             const temaBox = document.querySelector(`.theme-opt[data-theme="${dados.tema}"]`);
@@ -768,15 +854,61 @@ async function carregarConfiguracoes() {
 
 async function salvarConfiguracoes(e) {
     e.preventDefault(); fecharTeclado();
+
     const tema = document.querySelector('.theme-opt.selected')?.getAttribute('data-theme') || 'rose';
+    const nomeLoja = document.getElementById('cfgNomeLoja')?.value || '';
+    const whatsapp = document.getElementById('cfgWhats')?.value || '';
+    const vendedor = document.getElementById('cfgVendedor')?.value || '';
+    const instagram = document.getElementById('cfgInstagram')?.value || '';
+
+    // Slug (opcional, mas recomendado)
+    const slugEl = document.getElementById('cfgSlug');
+    let slug = slugEl ? slugEl.value : '';
+    slug = slugify(slug);
+
+    if (slugEl) slugEl.value = slug;
+
+    if (slug && !isValidSlug(slug)) {
+        return Alert.fire('Atenção', 'Slug inválido. Use apenas letras minúsculas, números e hífen (sem espaços).', 'warning');
+    }
+
     const payload = { 
-        nome_loja: document.getElementById('cfgNomeLoja').value, whatsapp: document.getElementById('cfgWhats').value, 
-        vendedor: document.getElementById('cfgVendedor').value, instagram: document.getElementById('cfgInstagram').value, tema: tema
+        nome_loja: nomeLoja,
+        whatsapp: whatsapp,
+        vendedor: vendedor,
+        instagram: instagram,
+        tema: tema
     };
-    const res = await fetch(API.config, { method: 'POST', body: JSON.stringify(payload) });
-    const json = await res.json();
-    if (json.success) Toast.fire({ icon: 'success', title: 'Salvo!' });
-    else Alert.fire('Erro', 'Não foi possível salvar.', 'error');
+
+    // Envia slug somente se existir campo na tela (configurações.html ou aba Config) e se mudou
+    if (slugEl) {
+        payload.slug = slug || null;
+    }
+
+    try {
+        const res = await fetch(API.config, { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const json = await res.json();
+
+        if (json.success) {
+            Toast.fire({ icon: 'success', title: 'Salvo!' });
+
+            // Atualiza slug local (para link da vitrine)
+            if (slugEl) {
+                App.data.lojaSlug = (json.slug || slug || '').toString() || null;
+                originalSlug = App.data.lojaSlug || '';
+                gerarLinkVitrine();
+            }
+        } else {
+            Alert.fire('Erro', json.error || 'Não foi possível salvar.', 'error');
+        }
+    } catch (e) {
+        Alert.fire('Erro', 'Erro de conexão.', 'error');
+    }
 }
 
 function calcularPrecoFinal() {
@@ -792,14 +924,32 @@ function calcularMarkupReverso() {
 
 function gerarLinkVitrine() {
     if(!App.data.lojaId) return;
+
+    // Prioriza slug (URL bonita), senão usa fallback com querystring
+    const slug = App.data.lojaSlug || document.getElementById('cfgSlug')?.value || '';
+    if (slug) {
+        updateLinkUI(slug);
+        return;
+    }
+
     const el = document.getElementById('linkVitrine');
-    const baseUrl = window.location.origin + window.location.pathname;
-    const novaUrl = baseUrl.replace('dashboard.html', 'vitrine.html') + '?loja=' + App.data.lojaId;
-    if(el) el.value = novaUrl;
+    const btnAbrir = document.getElementById('btnAbrirLink');
+
+    const baseUrl = window.location.origin;
+    const fallback = `${baseUrl}/vitrine.html?loja=${App.data.lojaId}`;
+
+    if(el) el.value = fallback;
+    if(btnAbrir) btnAbrir.href = fallback;
 }
 function copiarLinkVitrine() {
     const el = document.getElementById('linkVitrine');
-    if(el) { el.select(); document.execCommand('copy'); Toast.fire({ icon: 'success', title: 'Copiado!' }); }
+    const btnAbrir = document.getElementById('btnAbrirLink');
+    if(el) {
+        el.select();
+        document.execCommand('copy');
+        if (btnAbrir) btnAbrir.href = el.value || "#";
+        Toast.fire({ icon: 'success', title: 'Copiado!' });
+    }
 }
 
 function renderizarSeletorData() {

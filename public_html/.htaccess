@@ -27,7 +27,6 @@
 
     # =========================================================
     # 5) Fallback: tudo que sobrar vai para /public
-    # (útil quando o Document Root não está apontando para /public)
     # =========================================================
     RewriteCond %{REQUEST_URI} !^/public/ [NC]
     RewriteRule ^(.*)$ public/$1 [L]
@@ -35,8 +34,6 @@
 
 # =========================================================
 # SEGURANÇA: bloquear arquivos sensíveis
-# - Bloqueia .env e variações (.env.example, .env.local etc)
-# - Bloqueia dotfiles em geral (.git, .htaccess, etc)
 # =========================================================
 
 <IfModule mod_authz_core.c>
