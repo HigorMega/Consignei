@@ -1,0 +1,45 @@
+# =========================
+# Segurança básica
+# =========================
+Options -Indexes
+
+# =========================
+# URL limpa: sem .html
+# =========================
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # 1) Se alguém acessar /pagina.html -> redireciona para /pagina
+    RewriteCond %{THE_REQUEST} \s/+([^\s?]+)\.html[\s?] [NC]
+    RewriteRule ^ %1 [R=301,L,NE]
+
+    # 2) Se acessar /pagina (sem extensão) e existir /pagina.html -> serve /pagina.html
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}.html -f
+    RewriteRule ^(.+?)/?$ $1.html [L]
+</IfModule>
+
+# Garante que / abra index.html
+DirectoryIndex index.html
+
+# =========================
+# Cache de assets (o que você já tinha)
+# =========================
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType image/x-icon "access plus 1 month"
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|png|jpe?g|gif|svg|webp|ico)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+</IfModule>
